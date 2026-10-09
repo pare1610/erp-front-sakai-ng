@@ -16,6 +16,9 @@ import { catchError, finalize } from 'rxjs/operators';
 import { OrderHeaderDto } from '@/models/erpdb';
 import { OrderDetailService } from '@/app/services/order-detail-service';
 
+// Proyectos de las lineas unidos en un texto: el filtro global de p-table no busca dentro de arreglos.
+type OrderRow = OrderHeaderDto & { orderReferProjects: string };
+
 interface expandedRows {
     [key: string]: boolean;
 }
@@ -53,17 +56,15 @@ export class OrderDetailComponent implements OnInit {
     private readonly allOrders = signal<OrderHeaderDto[]>([]);
 
     // Igual que el filtro "estados" del backend: solo pedidos con lineas en los estados elegidos y solo esas lineas.
-    readonly orders = computed(() => {
+    readonly orders = computed<OrderRow[]>(() => {
         const statuses = new Set(this.selectedStatuses());
-        if (statuses.size === 0) {
-            return this.allOrders();
-        }
         return this.allOrders()
-            .map((order) => ({
-                ...order,
-                orderReference: (order.orderReference ?? []).filter((ref) => statuses.has(ref.orderReferStatus?.orderReferStatusName ?? ''))
-            }))
-            .filter((order) => order.orderReference.length > 0);
+            .map((order) => {
+                const orderReference = (order.orderReference ?? []).filter((ref) => statuses.size === 0 || statuses.has(ref.orderReferStatus?.orderReferStatusName ?? ''));
+                const projects = new Set(orderReference.map((ref) => ref.orderReferProject?.projeName).filter((name): name is string => !!name));
+                return { ...order, orderReference, orderReferProjects: [...projects].join(' ') };
+            })
+            .filter((order) => statuses.size === 0 || order.orderReference.length > 0);
     });
 
     readonly loading = signal(true);
