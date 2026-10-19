@@ -16,8 +16,8 @@ import { catchError, finalize } from 'rxjs/operators';
 import { OrderHeaderDto } from '@/models/erpdb';
 import { OrderDetailService } from '@/app/services/order-detail-service';
 
-// Proyectos de las lineas unidos en un texto: el filtro global de p-table no busca dentro de arreglos.
-type OrderRow = OrderHeaderDto & { orderReferProjects: string };
+// Proyectos y lineas de negocio de las lineas unidos en un texto: el filtro global de p-table no busca dentro de arreglos.
+type OrderRow = OrderHeaderDto & { orderReferProjects: string; orderBusinessLines: string };
 
 interface expandedRows {
     [key: string]: boolean;
@@ -62,7 +62,9 @@ export class OrderDetailComponent implements OnInit {
             .map((order) => {
                 const orderReference = (order.orderReference ?? []).filter((ref) => statuses.size === 0 || statuses.has(ref.orderReferStatus?.orderReferStatusName ?? ''));
                 const projects = new Set(orderReference.map((ref) => ref.orderReferProject?.projeName).filter((name): name is string => !!name));
-                return { ...order, orderReference, orderReferProjects: [...projects].join(' ') };
+                // Se recalcula desde las lineas filtradas: orderHeaderBusinessLine incluye las de todos los estados.
+                const businessLines = new Set(orderReference.map((ref) => ref.orderReferBusinessLine?.referClassName).filter((name): name is string => !!name));
+                return { ...order, orderReference, orderReferProjects: [...projects].join(' '), orderBusinessLines: [...businessLines].join(', ') };
             })
             .filter((order) => statuses.size === 0 || order.orderReference.length > 0);
     });

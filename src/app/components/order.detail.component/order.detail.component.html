@@ -17,6 +17,7 @@
                 [globalFilterFields]="[
                     'orderHeaderNumber',
                     'orderReferProjects',
+                    'orderBusinessLines',
                     'orderHeaderDescription',
                     'orderHeaderPaymeConditions',
                     'orderHeaderBranch.branchClient.clientThirdParty.thirdPartyName',
@@ -96,6 +97,12 @@
                                 <p-columnFilter type="text" field="orderHeaderVendor.vendorThirdParty.thirdPartyName" display="menu" placeholder="Buscar por vendedor"></p-columnFilter>
                             </div>
                         </th>
+                        <th pSortableColumn="orderBusinessLines" style="min-width: 12rem">
+                            <div class="flex justify-between items-center">
+                                <span>Línea de negocio <p-sortIcon field="orderBusinessLines" /></span>
+                                <p-columnFilter type="text" field="orderBusinessLines" display="menu" placeholder="Buscar por línea"></p-columnFilter>
+                            </div>
+                        </th>
                         <th pSortableColumn="orderHeaderDescription" style="min-width: 12rem">
                             <div class="flex justify-between items-center">
                                 <span>Descripción <p-sortIcon field="orderHeaderDescription" /></span>
@@ -120,18 +127,19 @@
                         <td>{{ order.orderHeaderBranch?.branchClient?.clientThirdParty?.thirdPartyName }}</td>
                         <td>{{ order.orderHeaderBranch?.branchCity }}</td>
                         <td>{{ order.orderHeaderVendor?.vendorThirdParty?.thirdPartyName }}</td>
+                        <td>{{ order.orderBusinessLines || '-' }}</td>
                         <td>{{ order.orderHeaderDescription }}</td>
                         <td>{{ order.orderHeaderPaymeConditions }}</td>
                     </tr>
                 </ng-template>
                 <ng-template #emptymessage>
                     <tr>
-                        <td colspan="8">No se encontraron pedidos.</td>
+                        <td colspan="9">No se encontraron pedidos.</td>
                     </tr>
                 </ng-template>
                 <ng-template #expandedrow let-order>
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <h5>Cliente / Sede</h5>
@@ -164,6 +172,7 @@
                                             <th pSortableColumn="orderReferQuantity">Cantidad <p-sortIcon field="orderReferQuantity" /></th>
                                             <th pSortableColumn="orderReferUnitPrice">Valor unit. <p-sortIcon field="orderReferUnitPrice" /></th>
                                             <th pSortableColumn="valorTotal">Valor total <p-sortIcon field="valorTotal" /></th>
+                                            <th pSortableColumn="orderReferBusinessLine.referClassName">Línea de negocio <p-sortIcon field="orderReferBusinessLine.referClassName" /></th>
                                             <th pSortableColumn="orderReferProject.projeName">Proyecto <p-sortIcon field="orderReferProject.projeName" /></th>
                                             <th pSortableColumn="orderReferStatus.orderReferStatusName">Estado <p-sortIcon field="orderReferStatus.orderReferStatusName" /></th>
                                             <th pSortableColumn="orderReferDelivDate">Entrega <p-sortIcon field="orderReferDelivDate" /></th>
@@ -178,6 +187,7 @@
                                             <td>{{ ref.orderReferQuantity }}</td>
                                             <td>{{ ref.orderReferUnitPrice | currency: 'USD' }}</td>
                                             <td>{{ ref.valorTotal | currency: 'USD' }}</td>
+                                            <td>{{ ref.orderReferBusinessLine?.referClassName || '-' }}</td>
                                             <td>{{ ref.orderReferProject?.projeName || '-' }}</td>
                                             <td>
                                                 <p-tag
@@ -191,7 +201,7 @@
                                     </ng-template>
                                     <ng-template #emptymessage>
                                         <tr>
-                                            <td colspan="10">No hay referencias para este pedido.</td>
+                                            <td colspan="11">No hay referencias para este pedido.</td>
                                         </tr>
                                     </ng-template>
                                 </p-table>

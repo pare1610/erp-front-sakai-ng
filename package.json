@@ -23,6 +23,7 @@
         "chart.js": "4.4.2",
         "keycloak-angular": "^21.0.0",
         "keycloak-js": "^26.2.4",
+        "marked": "^15.0.12",
         "primeclt": "^0.1.5",
         "primeicons": "^7.0.0",
         "primeng": "^21.0.2",

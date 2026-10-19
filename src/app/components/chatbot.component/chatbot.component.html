@@ -1,0 +1,34 @@
+<div class="card flex flex-col">
+    <div class="flex justify-between items-center mb-4">
+        <div class="font-semibold text-xl">Asistente ERP</div>
+        <p-button icon="pi pi-refresh" label="Nueva conversación" [text]="true" size="small" [disabled]="enviando()" (onClick)="reiniciar()" />
+    </div>
+
+    <div #mensajesContainer class="chatbot-mensajes flex flex-col gap-3 overflow-y-auto p-2 mb-4">
+        @if (mensajes().length === 0) {
+            <div class="text-muted-color text-center my-auto">Pregúntame lo que quieras sobre pedidos, clientes, referencias y demás datos del ERP.</div>
+        }
+        @for (mensaje of mensajes(); track $index) {
+            <div class="chatbot-burbuja" [class.chatbot-usuario]="mensaje.autor === 'usuario'" [class.chatbot-bot]="mensaje.autor === 'bot'" [class.chatbot-error]="mensaje.error" [innerHTML]="mensaje.html"></div>
+        }
+        @if (enviando()) {
+            <div class="chatbot-burbuja chatbot-bot text-muted-color"><i class="pi pi-spin pi-spinner mr-2"></i>Analizando y consultando la base de datos...</div>
+        }
+    </div>
+
+    <div class="flex gap-2 items-end">
+        <textarea
+            pTextarea
+            class="flex-1"
+            rows="2"
+            [autoResize]="true"
+            [maxlength]="maxCaracteres"
+            placeholder="Escribe tu pregunta (Enter para enviar, Shift+Enter para nueva línea)"
+            [ngModel]="texto()"
+            (ngModelChange)="texto.set($event)"
+            (keydown)="onKeydown($event)"
+            [disabled]="enviando()"
+        ></textarea>
+        <p-button icon="pi pi-send" [disabled]="enviando() || !texto().trim()" (onClick)="enviar()" ariaLabel="Enviar" />
+    </div>
+</div>

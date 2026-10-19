@@ -1,0 +1,71 @@
+.chatbot-mensajes {
+    height: 28rem;
+    min-height: 12rem;
+}
+
+.chatbot-burbuja {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--content-border-radius);
+    overflow-x: auto;
+    word-break: break-word;
+}
+
+.chatbot-usuario {
+    align-self: flex-end;
+    background: var(--primary-color);
+    color: var(--primary-contrast-color);
+}
+
+.chatbot-bot {
+    align-self: flex-start;
+    background: var(--surface-ground);
+    color: var(--text-color);
+}
+
+.chatbot-error {
+    color: var(--p-red-500);
+}
+
+// El HTML del Markdown se inserta con [innerHTML], fuera del encapsulamiento de estilos
+:host ::ng-deep .chatbot-bot {
+    p {
+        margin: 0 0 0.5rem;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+
+    ul,
+    ol {
+        margin: 0 0 0.5rem;
+        padding-left: 1.25rem;
+    }
+
+    table {
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+        font-size: 0.875rem;
+    }
+
+    th,
+    td {
+        border: 1px solid var(--surface-border);
+        padding: 0.25rem 0.5rem;
+        text-align: left;
+    }
+
+    th {
+        background: var(--surface-card);
+    }
+
+    code {
+        font-size: 0.875rem;
+    }
+
+    pre {
+        margin: 0.5rem 0;
+        white-space: pre-wrap;
+    }
+}
