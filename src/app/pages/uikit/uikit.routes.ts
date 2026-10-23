@@ -17,6 +17,7 @@ import { MenuDemo } from './menudemo';
 import { AppPedidoComponent } from '../../components/app.pedido.component/app.pedido.component';
 import { PedidoTableComponent } from '../../components/pedido.table.component/pedido.table.component';
 import { OrderDetailComponent } from '../../components/order.detail.component/order.detail.component';
+import { OrderDashboardComponent } from '../../components/order.dashboard.component/order.dashboard.component';
 
 export default [
     { path: 'button', data: { breadcrumb: 'Button' }, component: ButtonDemo },
@@ -35,6 +36,7 @@ export default [
     { path: 'pedido2', data: { breadcrumb: 'Pedido2' }, component: AppPedidoComponent },
     { path: 'pedidotabla', data: { breadcrumb: 'PedidoTabla' }, component: PedidoTableComponent },
     { path: 'orderdetail', data: { breadcrumb: 'Detalle Pedidos' }, component: OrderDetailComponent },
+    { path: 'informepedidos', data: { breadcrumb: 'Informe Pedidos' }, component: OrderDashboardComponent },
     { path: 'overlay', data: { breadcrumb: 'Overlay' }, component: OverlayDemo },
     { path: 'tree', data: { breadcrumb: 'Tree' }, component: TreeDemo },
     { path: 'menu', data: { breadcrumb: 'Menu' }, component: MenuDemo },

@@ -1,0 +1,234 @@
+<div class="flex flex-col gap-6">
+    <!-- Filtros -->
+    <div class="card mb-0!">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="rango" class="font-medium">Periodo</label>
+                <p-datepicker inputId="rango" [(ngModel)]="range" selectionMode="range" [readonlyInput]="true" dateFormat="dd/mm/yy" [showIcon]="true" [maxDate]="maxDate" (onClose)="load()" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="cliente" class="font-medium">Cliente</label>
+                <p-multiselect inputId="cliente" [options]="clientOptions()" [ngModel]="selectedClients()" (ngModelChange)="selectedClients.set($event)" placeholder="Todos" [filter]="true" display="chip" [maxSelectedLabels]="2" [virtualScroll]="true" [virtualScrollItemSize]="40" class="w-72" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="zona" class="font-medium">Zona</label>
+                <p-multiselect inputId="zona" [options]="zoneOptions()" [ngModel]="selectedZones()" (ngModelChange)="selectedZones.set($event)" placeholder="Todas" display="chip" [maxSelectedLabels]="3" class="w-48" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="vendedor" class="font-medium">Vendedor</label>
+                <p-multiselect inputId="vendedor" [options]="vendorOptions()" [ngModel]="selectedVendors()" (ngModelChange)="selectedVendors.set($event)" placeholder="Todos" [filter]="true" display="chip" [maxSelectedLabels]="2" class="w-56" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="linea" class="font-medium">Línea de negocio</label>
+                <p-multiselect inputId="linea" [options]="lineOptions()" [ngModel]="selectedLines()" (ngModelChange)="selectedLines.set($event)" placeholder="Todas" [filter]="true" display="chip" [maxSelectedLabels]="2" class="w-56" />
+            </div>
+            <p-button label="Limpiar" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearFilters()" />
+            <p-button icon="pi pi-refresh" [text]="true" [loading]="loading()" (onClick)="load()" ariaLabel="Recargar" />
+            @if (period(); as p) {
+                <span class="text-muted-color text-sm ml-auto">Comparado con {{ formatDate(p.prevFrom) }} – {{ formatDate(p.prevTo) }}</span>
+            }
+        </div>
+        @if (error()) {
+            <p-message severity="error" [text]="error()!" styleClass="mt-4" />
+        }
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6">
+        <div class="card mb-0!">
+            <div class="text-muted-color font-medium mb-2">Venta del periodo</div>
+            <div class="text-surface-900 dark:text-surface-0 font-semibold text-2xl" [title]="cop(kpis().sales)">{{ copShort(kpis().sales) }}</div>
+            @let d1 = delta(kpis().salesDelta);
+            <div class="text-sm mt-2" [class]="d1.cls"><i [class]="d1.icon" class="text-xs"></i> {{ d1.text }}</div>
+        </div>
+        <div class="card mb-0!">
+            <div class="text-muted-color font-medium mb-2">Pedidos · ticket promedio</div>
+            <div class="text-surface-900 dark:text-surface-0 font-semibold text-2xl">
+                {{ kpis().orders }} <span class="text-base font-normal text-muted-color">· {{ copShort(kpis().ticket) }}</span>
+            </div>
+            @let d2 = delta(kpis().ticketDelta);
+            <div class="text-sm mt-2" [class]="d2.cls"><i [class]="d2.icon" class="text-xs"></i> Ticket {{ d2.text }}</div>
+        </div>
+        <div class="card mb-0!">
+            <div class="text-muted-color font-medium mb-2">Abierto por entregar</div>
+            <div class="text-surface-900 dark:text-surface-0 font-semibold text-2xl" [title]="cop(kpis().open)">{{ copShort(kpis().open) }}</div>
+            <div class="text-sm mt-2 text-muted-color">{{ kpis().openOrders }} pedidos en Aprobado o En Revisión</div>
+        </div>
+        <div class="card mb-0!">
+            <div class="text-muted-color font-medium mb-2">Entregas vencidas</div>
+            <div class="font-semibold text-2xl" [class]="kpis().overdue ? 'text-red-600 dark:text-red-400' : 'text-surface-900 dark:text-surface-0'" [title]="cop(kpis().overdue)">
+                @if (kpis().overdue) {
+                    <i class="pi pi-exclamation-triangle text-xl"></i>
+                }
+                {{ copShort(kpis().overdue) }}
+            </div>
+            <div class="text-sm mt-2 text-muted-color">{{ kpis().overdueOrders }} pedidos con fecha de entrega pasada</div>
+        </div>
+        <div class="card mb-0!">
+            <div class="text-muted-color font-medium mb-2">Cancelado / anulado</div>
+            <div class="text-surface-900 dark:text-surface-0 font-semibold text-2xl">{{ pct(kpis().lossRate) }}</div>
+            @let d3 = delta(kpis().lossRateDelta, true, false);
+            <div class="text-sm mt-2" [class]="d3.cls"><i [class]="d3.icon" class="text-xs"></i> {{ d3.text }} · {{ copShort(kpis().lost) }}</div>
+        </div>
+    </div>
+
+    <!-- Tendencia -->
+    <div class="card mb-0!">
+        <div class="font-semibold text-xl">Venta por {{ granularity() === 'month' ? 'mes' : 'semana' }} y línea de negocio</div>
+        <div class="text-muted-color text-sm mb-4">Sin líneas canceladas ni anuladas. Las líneas fuera de las 7 principales se agrupan en “Otras líneas”.</div>
+        <p-chart type="bar" [data]="trendData()" [options]="stackedOptions()" height="22rem" />
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Top 10 clientes</div>
+            <div class="text-muted-color text-sm mb-4">
+                {{ topClients().clients }} clientes compraron · los 5 primeros concentran <b>{{ pct(topClients().top5Share) }}</b> de la venta
+            </div>
+            <p-chart type="bar" [data]="clientsData()" [options]="hBarOptions()" height="22rem" />
+        </div>
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Mix por línea de negocio</div>
+            <div class="text-muted-color text-sm mb-4">Venta del periodo por línea</div>
+            <p-chart type="bar" [data]="lineMixData()" [options]="hBarOptions()" height="22rem" />
+        </div>
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Venta por zona</div>
+            <div class="text-muted-color text-sm mb-4">Zona comercial del cliente en el periodo</div>
+            <p-chart type="bar" [data]="zoneData()" [options]="hBarOptions()" height="22rem" />
+        </div>
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Valor por estado de línea</div>
+            <div class="text-muted-color text-sm mb-4">Pedidos del periodo, incluidas las líneas perdidas</div>
+            <p-chart type="bar" [data]="statusData()" [options]="hBarOptions()" height="22rem" />
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Envejecimiento de lo abierto</div>
+            <div class="text-muted-color text-sm mb-4">Valor en Aprobado o En Revisión según días a la fecha de entrega</div>
+            <p-chart type="bar" [data]="agingData()" [options]="vBarOptions()" height="22rem" />
+        </div>
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl mb-4">Vendedores</div>
+            <p-table [value]="vendors()" sortField="sales" [sortOrder]="-1" [scrollable]="true" scrollHeight="22rem" styleClass="p-datatable-sm">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="name">Vendedor <p-sortIcon field="name" /></th>
+                        <th pSortableColumn="sales" class="text-right">Venta <p-sortIcon field="sales" /></th>
+                        <th pSortableColumn="orders" class="text-right">Pedidos <p-sortIcon field="orders" /></th>
+                        <th pSortableColumn="ticket" class="text-right">Ticket <p-sortIcon field="ticket" /></th>
+                        <th pSortableColumn="lossRate" class="text-right">% perdido <p-sortIcon field="lossRate" /></th>
+                        <th pSortableColumn="delta" class="text-right">vs. ant. <p-sortIcon field="delta" /></th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-v>
+                    <tr>
+                        <td>{{ v.name }}</td>
+                        <td class="text-right">{{ cop(v.sales) }}</td>
+                        <td class="text-right">{{ v.orders }}</td>
+                        <td class="text-right">{{ copShort(v.ticket) }}</td>
+                        <td class="text-right">{{ pct(v.lossRate) }}</td>
+                        @let dv = delta(v.delta);
+                        <td class="text-right" [class]="dv.cls">{{ v.delta == null ? '—' : pct(v.delta) }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr><td colspan="6">Sin ventas en el periodo.</td></tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <!-- Tablas de accion -->
+    <div class="card mb-0!">
+        <div class="font-semibold text-xl">Pedidos que requieren atención</div>
+        <div class="text-muted-color text-sm mb-4">Líneas detenidas o con entrega vencida, ordenadas por valor pendiente</div>
+        <p-table [value]="attentionOrders()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" [rowHover]="true">
+            <ng-template #header>
+                <tr>
+                    <th pSortableColumn="number">Pedido <p-sortIcon field="number" /></th>
+                    <th pSortableColumn="date">Fecha <p-sortIcon field="date" /></th>
+                    <th pSortableColumn="client">Cliente <p-sortIcon field="client" /></th>
+                    <th pSortableColumn="vendor">Vendedor <p-sortIcon field="vendor" /></th>
+                    <th>Motivo</th>
+                    <th pSortableColumn="pending" class="text-right">Valor <p-sortIcon field="pending" /></th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-o>
+                <tr>
+                    <td>{{ o.number }}</td>
+                    <td>{{ formatDate(o.date) }}</td>
+                    <td>{{ o.client }}</td>
+                    <td>{{ o.vendor }}</td>
+                    <td class="flex flex-wrap gap-2">
+                        @if (o.held) {
+                            <p-tag severity="warn" icon="pi pi-pause" value="Detenido" />
+                        }
+                        @if (o.daysLate != null) {
+                            <p-tag severity="danger" icon="pi pi-clock" [value]="'Vencido ' + o.daysLate + ' d'" />
+                        }
+                    </td>
+                    <td class="text-right">{{ cop(o.pending) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="6">No hay pedidos detenidos ni vencidos.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Clientes sin compra en el periodo</div>
+            <div class="text-muted-color text-sm mb-4">Compraron en el periodo anterior y no en el actual</div>
+            <p-table [value]="atRiskClients()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+                <ng-template #header>
+                    <tr>
+                        <th pSortableColumn="name">Cliente <p-sortIcon field="name" /></th>
+                        <th pSortableColumn="prevSales" class="text-right">Venta anterior <p-sortIcon field="prevSales" /></th>
+                        <th pSortableColumn="daysSince" class="text-right">Días sin comprar <p-sortIcon field="daysSince" /></th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-c>
+                    <tr>
+                        <td>{{ c.name }}</td>
+                        <td class="text-right">{{ cop(c.prevSales) }}</td>
+                        <td class="text-right" [title]="'Última compra: ' + formatDate(c.lastPurchase)">{{ c.daysSince }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr><td colspan="3">Todos los clientes del periodo anterior volvieron a comprar.</td></tr>
+                </ng-template>
+            </p-table>
+        </div>
+        <div class="card mb-0!">
+            <div class="font-semibold text-xl">Top 15 referencias</div>
+            <div class="text-muted-color text-sm mb-4">Por venta del periodo</div>
+            <p-table [value]="topReferences()" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="28rem">
+                <ng-template #header>
+                    <tr>
+                        <th>Referencia</th>
+                        <th>Línea</th>
+                        <th class="text-right">Cantidad</th>
+                        <th class="text-right">Pedidos</th>
+                        <th class="text-right">Venta</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-r>
+                    <tr>
+                        <td><span class="text-muted-color">{{ r.cod }}</span> {{ r.name }}</td>
+                        <td>{{ r.line }}</td>
+                        <td class="text-right">{{ r.qty | number }}</td>
+                        <td class="text-right">{{ r.orders }}</td>
+                        <td class="text-right">{{ cop(r.total) }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr><td colspan="5">Sin ventas en el periodo.</td></tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+</div>
