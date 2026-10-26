@@ -1,3 +1,4 @@
+        <p-toast />
         <div class="card">
             <div class="font-semibold text-xl mb-4">Detalle de pedidos</div>
             <p-table
@@ -10,13 +11,14 @@
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
                 dataKey="orderHeaderId"
+                sortField="orderHeaderNumber"
+                [sortOrder]="-1"
                 [tableStyle]="{ width: '100%' }"
                 [rowHover]="true"
                 [showGridlines]="true"
                 [expandedRowKeys]="expandedRows"
                 [globalFilterFields]="[
                     'orderHeaderNumber',
-                    'orderHeaderProject',
                     'orderHeaderDescription',
                     'orderHeaderPaymeConditions',
                     'orderHeaderBranch.branchClient.clientThirdParty.thirdPartyName',
@@ -52,12 +54,6 @@
                             <div class="flex justify-between items-center">
                                 <span>Fecha <p-sortIcon field="orderHeaderDate" /></span>
                                 <p-columnFilter type="text" field="orderHeaderDate" display="menu" placeholder="yyyy-mm-dd"></p-columnFilter>
-                            </div>
-                        </th>
-                        <th pSortableColumn="orderHeaderProject" style="min-width: 10rem">
-                            <div class="flex justify-between items-center">
-                                <span>Proyecto <p-sortIcon field="orderHeaderProject" /></span>
-                                <p-columnFilter type="text" field="orderHeaderProject" display="menu" placeholder="Buscar por proyecto"></p-columnFilter>
                             </div>
                         </th>
                         <th pSortableColumn="orderHeaderBranch.branchClient.clientThirdParty.thirdPartyName" style="min-width: 14rem">
@@ -99,7 +95,6 @@
                         </td>
                         <td>{{ order.orderHeaderNumber }}</td>
                         <td>{{ order.orderHeaderDate | date: 'yyyy-MM-dd' }}</td>
-                        <td>{{ order.orderHeaderProject || '-' }}</td>
                         <td>{{ order.orderHeaderBranch?.branchClient?.clientThirdParty?.thirdPartyName }}</td>
                         <td>{{ order.orderHeaderBranch?.branchCity }}</td>
                         <td>{{ order.orderHeaderVendor?.vendorThirdParty?.thirdPartyName }}</td>
@@ -109,12 +104,12 @@
                 </ng-template>
                 <ng-template #emptymessage>
                     <tr>
-                        <td colspan="9">No se encontraron pedidos.</td>
+                        <td colspan="8">No se encontraron pedidos.</td>
                     </tr>
                 </ng-template>
                 <ng-template #expandedrow let-order>
                     <tr>
-                        <td colspan="9">
+                        <td colspan="8">
                             <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <h5>Cliente / Sede</h5>
@@ -147,7 +142,8 @@
                                             <th pSortableColumn="orderReferQuantity">Cantidad <p-sortIcon field="orderReferQuantity" /></th>
                                             <th pSortableColumn="orderReferUnitPrice">Valor unit. <p-sortIcon field="orderReferUnitPrice" /></th>
                                             <th pSortableColumn="valorTotal">Valor total <p-sortIcon field="valorTotal" /></th>
-                                            <th pSortableColumn="orderReferApproState">Estado <p-sortIcon field="orderReferApproState" /></th>
+                                            <th pSortableColumn="orderReferProject.projeName">Proyecto <p-sortIcon field="orderReferProject.projeName" /></th>
+                                            <th pSortableColumn="orderReferStatus.orderReferStatusName">Estado <p-sortIcon field="orderReferStatus.orderReferStatusName" /></th>
                                             <th pSortableColumn="orderReferDelivDate">Entrega <p-sortIcon field="orderReferDelivDate" /></th>
                                         </tr>
                                     </ng-template>
@@ -160,15 +156,16 @@
                                             <td>{{ ref.orderReferQuantity }}</td>
                                             <td>{{ ref.orderReferUnitPrice | currency: 'USD' }}</td>
                                             <td>{{ ref.valorTotal | currency: 'USD' }}</td>
+                                            <td>{{ ref.orderReferProject?.projeName || '-' }}</td>
                                             <td>
-                                                <p-tag [value]="ref.orderReferApproState" [severity]="getSeverity(ref.orderReferApproState)" />
+                                                <p-tag [value]="ref.orderReferStatus?.orderReferStatusName" [severity]="getSeverity(ref.orderReferStatus?.orderReferStatusId)" />
                                             </td>
                                             <td>{{ ref.orderReferDelivDate | date: 'yyyy-MM-dd' }}</td>
                                         </tr>
                                     </ng-template>
                                     <ng-template #emptymessage>
                                         <tr>
-                                            <td colspan="9">No hay referencias para este pedido.</td>
+                                            <td colspan="10">No hay referencias para este pedido.</td>
                                         </tr>
                                     </ng-template>
                                 </p-table>

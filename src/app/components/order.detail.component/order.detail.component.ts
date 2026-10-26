@@ -8,11 +8,19 @@ import { RippleModule } from 'primeng/ripple';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ObjectUtils } from 'primeng/utils';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, shareReplay, take } from 'rxjs/operators';
-import { OrderDetailDto } from '@/models/erpdb';
-import { OrderDetailService } from '@/app/services/order-detail-service';
+import { OrderHeaderDto } from '@/models/erpdb';
+import { OrderHeaderService } from '@/app/services/order-header-service';
+
+// Dias hacia atras que se consultan desde hoy.
+const DIAS = 270;
+
+const toIsoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 interface expandedRows {
     [key: string]: boolean;
@@ -21,13 +29,15 @@ interface expandedRows {
 @Component({
     selector: 'app-order-detail',
     standalone: true,
-    imports: [TableModule, InputIconModule, TagModule, InputTextModule, CommonModule, FormsModule, ButtonModule, RippleModule, IconFieldModule],
-    templateUrl: './order.detail.component.html'
+    imports: [TableModule, InputIconModule, TagModule, InputTextModule, CommonModule, FormsModule, ButtonModule, RippleModule, IconFieldModule, ToastModule],
+    templateUrl: './order.detail.component.html',
+    providers: [MessageService]
 })
 export class OrderDetailComponent implements OnInit {
-    private readonly orderDetailService = inject(OrderDetailService);
+    private readonly orderHeaderService = inject(OrderHeaderService);
+    private readonly messageService = inject(MessageService);
 
-    orders$: Observable<OrderDetailDto[]> = of([]);
+    orders$: Observable<OrderHeaderDto[]> = of([]);
 
     expandedRows: expandedRows = {};
 
@@ -38,8 +48,16 @@ export class OrderDetailComponent implements OnInit {
     @ViewChild('filter') filter!: ElementRef;
 
     ngOnInit() {
-        this.orders$ = this.orderDetailService.getOrderDetails(270, 0, 1000, 'orderHeaderNumber,desc').pipe(
-            catchError(() => of([])),
+        const hoy = new Date();
+        const desde = new Date(hoy);
+        desde.setDate(hoy.getDate() - DIAS);
+
+        this.orders$ = this.orderHeaderService.getOrderHeaders(toIsoDate(desde), toIsoDate(hoy)).pipe(
+            catchError((error: HttpErrorResponse) => {
+                console.error('Error cargando pedidos', error);
+                this.messageService.add({ severity: 'error', summary: `Error ${error.status}`, detail: 'No se pudieron cargar los pedidos.', life: 6000 });
+                return of([]);
+            }),
             finalize(() => {
                 this.loading = false;
             }),
@@ -80,14 +98,15 @@ export class OrderDetailComponent implements OnInit {
         this.filter.nativeElement.value = '';
     }
 
-    getSeverity(status: string | null | undefined) {
-        switch (status) {
-            case 'A':
+    // Estados: 1 Cancelado, 2 Aprobado, 3 Detenido, 4 En Revision, 5 Anulado
+    getSeverity(statusId: number | null | undefined) {
+        switch (statusId) {
+            case 2:
                 return 'success';
-            case 'P':
+            case 3:
                 return 'warn';
-            case 'C':
-            case 'R':
+            case 1:
+            case 5:
                 return 'danger';
             default:
                 return 'info';
